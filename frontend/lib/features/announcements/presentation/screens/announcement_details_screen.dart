@@ -109,110 +109,115 @@ class AnnouncementDetailsScreen extends StatelessWidget {
                   ),
                   
                   // Scrollable Content Content
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.only(top: 32, left: 24, right: 24, bottom: 100),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Midterm Examination Schedule Released',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF1A1A1A),
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Posted 2 hours ago • by Admin',
-                          style: TextStyle(
-                            color: Color(0xFF666666),
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        
-                        // Icon Chips Row
-                        Row(
-                          children: [
-                            _buildInfoChip(Icons.category_outlined, 'Academic'),
-                            const SizedBox(width: 12),
-                            _buildInfoChip(Icons.people_outline, 'All students'),
-                            const SizedBox(width: 12),
-                            _buildInfoChip(Icons.notifications_outlined, 'Sent'),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 24),
-                        const Divider(color: Color(0xFFEEEEEE)),
-                        const SizedBox(height: 24),
-                        
-                        // Fake Image PDF box (Moved above description)
-                        Container(
-                          height: 110, // Reduced height
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(16),
-                            image: const DecorationImage(
-                              image: NetworkImage('https://via.placeholder.com/600x300/E0E0E0/9E9E9E?text=PDF+Schedule+Preview'),
-                              fit: BoxFit.cover,
+                  Positioned.fill(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(top: 32, left: 24, right: 24, bottom: 100),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Midterm Examination Schedule Released',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1A1A1A),
+                              height: 1.2,
                             ),
                           ),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  decoration: const BoxDecoration(
-                                    borderRadius: BorderRadius.only(
-                                      bottomLeft: Radius.circular(16),
-                                      bottomRight: Radius.circular(16),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Posted 2 hours ago • by Admin',
+                            style: TextStyle(
+                              color: Color(0xFF666666),
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // Icon Chips Row
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _buildInfoChip(Icons.category_outlined, 'Academic'),
+                                const SizedBox(width: 12),
+                                _buildInfoChip(Icons.people_outline, 'All students'),
+                                const SizedBox(width: 12),
+                                _buildInfoChip(Icons.notifications_outlined, 'Sent'),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          const Divider(color: Color(0xFFEEEEEE)),
+                          const SizedBox(height: 24),
+                          
+                          // Fake Image PDF box (Moved above description)
+                          Container(
+                            height: 110, // Reduced height
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(16),
+                              image: const DecorationImage(
+                                image: AssetImage('assets/images/announcement_banner.jpg'),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: const BoxDecoration(
+                                      borderRadius: BorderRadius.only(
+                                        bottomLeft: Radius.circular(16),
+                                        bottomRight: Radius.circular(16),
+                                      ),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [Colors.black54, Colors.transparent],
+                                      ),
                                     ),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [Colors.black54, Colors.transparent],
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'View Full PDF Schedule',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
+                                    child: const Text(
+                                      'View Full PDF Schedule',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                        
-                        const Text(
-                          'DETAILS',
-                          style: TextStyle(
-                            color: Color(0xFF757575),
-                            fontWeight: FontWeight.w800,
-                            fontSize: 12,
-                            letterSpacing: 1.2,
+                          const SizedBox(height: 32),
+                          
+                          const Text(
+                            'DETAILS',
+                            style: TextStyle(
+                              color: Color(0xFF757575),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              letterSpacing: 1.2,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        const Text(
-                          'The Office of the Registrar has officially released the schedule for the upcoming Midterm Examinations for the Fall 2024 Semester. Students are advised to review their specific course timings and venue assignments through the student portal.\n\nPlease note that exams will be conducted strictly according to the published timetable. No rescheduling requests will be entertained except in documented cases of medical emergencies or institutional conflicts.\n\nEnsure you arrive at least 15 minutes prior to the start time with your valid Student ID card. Digital copies of the ID will not be accepted at the examination halls.',
-                          style: TextStyle(
-                            color: Color(0xFF424242),
-                            fontSize: 15,
-                            height: 1.7,
+                          const SizedBox(height: 16),
+                          
+                          const Text(
+                            'The Office of the Registrar has officially released the schedule for the upcoming Midterm Examinations for the Fall 2024 Semester. Students are advised to review their specific course timings and venue assignments through the student portal.\n\nPlease note that exams will be conducted strictly according to the published timetable. No rescheduling requests will be entertained except in documented cases of medical emergencies or institutional conflicts.\n\nEnsure you arrive at least 15 minutes prior to the start time with your valid Student ID card. Digital copies of the ID will not be accepted at the examination halls.',
+                            style: TextStyle(
+                              color: Color(0xFF424242),
+                              fontSize: 15,
+                              height: 1.7,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

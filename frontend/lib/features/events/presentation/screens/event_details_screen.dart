@@ -14,11 +14,11 @@ class EventDetailsScreen extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
-            height: 300,
+            height: 260,
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage('https://via.placeholder.com/600x400/E0E0E0/9E9E9E?text=Building'),
+                  image: AssetImage('assets/images/event_banner.jpg'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -40,7 +40,7 @@ class EventDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const Positioned(
-                    bottom: 70, // Slightly higher so the white sheet doesn't completely cover it
+                    bottom: 50, // Slightly higher so the white sheet doesn't completely cover it
                     left: 20,
                     child: Text(
                       'Tech Fair 2024',
@@ -87,9 +87,8 @@ class EventDetailsScreen extends StatelessWidget {
             ),
           ),
 
-          // Main White Overlapping Sheet
           Positioned.fill(
-            top: 250,
+            top: 220,
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -157,6 +156,26 @@ class EventDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildInfoCard(
+                            icon: Icons.location_on_outlined,
+                            label: 'LOCATION',
+                            value: 'Main Courtyard',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildInfoCard(
+                            icon: Icons.people_outline,
+                            label: 'CAPACITY',
+                            value: '248 / 500',
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     
                     // Reserve Button
@@ -213,35 +232,39 @@ class EventDetailsScreen extends StatelessWidget {
                     const SizedBox(height: 32),
                     
                     // My Photo Notes
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'My photo notes',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1A1A1A),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'My photo notes',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1A1A1A),
+                            ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () {},
-                          child: const Row(
-                            children: [
-                              Icon(Icons.camera_alt_outlined, size: 16, color: Color(0xFF0D6E53)),
-                              SizedBox(width: 6),
-                              Text(
-                                '+ Add photo',
-                                style: TextStyle(
-                                  color: Color(0xFF0D6E53),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                ),
-                              )
-                            ],
+                          const SizedBox(width: 24),
+                          GestureDetector(
+                            onTap: () {},
+                            child: const Row(
+                              children: [
+                                Icon(Icons.camera_alt_outlined, size: 16, color: Color(0xFF0D6E53)),
+                                SizedBox(width: 6),
+                                Text(
+                                  '+ Add photo',
+                                  style: TextStyle(
+                                    color: Color(0xFF0D6E53),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     

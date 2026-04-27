@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../../core/routing/app_routes.dart';
 
 class CampusMapScreen extends StatefulWidget {
@@ -10,13 +11,9 @@ class CampusMapScreen extends StatefulWidget {
 }
 
 class _CampusMapScreenState extends State<CampusMapScreen> {
-  late GoogleMapController mapController;
+  final MapController _mapController = MapController();
 
   final LatLng _center = const LatLng(36.7538, 3.0588); // Example coordinates
-
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,14 +71,18 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
       body: Stack(
         children: [
           // MAP Placeholder/Mock
-          GoogleMap(
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: 15.0,
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: _center,
+              initialZoom: 15.0,
             ),
-            zoomControlsEnabled: false,
-            myLocationButtonEnabled: false,
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.orbit',
+              ),
+            ],
           ),
           
           // Custom Overlay Elements from Image
@@ -146,11 +147,11 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
             ),
           ),
 
-          // Bottom Sheet Draggable content
+          // Bottom Sheet Content
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: 260,
+              constraints: const BoxConstraints(maxHeight: 260),
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -159,88 +160,91 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
                   topRight: Radius.circular(32),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Nearby Places',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'VIEW ALL',
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Nearby Places',
                             style: TextStyle(
-                              color: Color(0xFF1E659A),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1A1A1A),
                             ),
                           ),
-                        ),
-                      ],
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text(
+                              'VIEW ALL',
+                              style: TextStyle(
+                                color: Color(0xFF1E659A),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        _buildCategoryPill('All', isSelected: true),
-                        const SizedBox(width: 12),
-                        _buildCategoryPill('Academic', isSelected: false),
-                        const SizedBox(width: 12),
-                        _buildCategoryPill('Food', isSelected: false),
-                        const SizedBox(width: 12),
-                        _buildCategoryPill('Library', isSelected: false),
-                        const SizedBox(width: 12),
-                        _buildCategoryPill('Housing', isSelected: false),
-                      ],
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          _buildCategoryPill('All', isSelected: true),
+                          const SizedBox(width: 12),
+                          _buildCategoryPill('Academic', isSelected: false),
+                          const SizedBox(width: 12),
+                          _buildCategoryPill('Food', isSelected: false),
+                          const SizedBox(width: 12),
+                          _buildCategoryPill('Library', isSelected: false),
+                          const SizedBox(width: 12),
+                          _buildCategoryPill('Housing', isSelected: false),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        _buildPlaceCard(
-                          title: 'Science Library',
-                          distance: '200m',
-                          status: 'Open until 8PM',
-                          imageUrl: 'https://via.placeholder.com/300x200/0D6E53/FFFFFF?text=Library',
-                        ),
-                        const SizedBox(width: 16),
-                        _buildPlaceCard(
-                          title: 'Food Court',
-                          distance: '450m',
-                          status: 'Busy',
-                          imageUrl: 'https://via.placeholder.com/300x200/F44336/FFFFFF?text=Food',
-                        ),
-                      ],
+                    const SizedBox(height: 20),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          _buildPlaceCard(
+                            title: 'Science Library',
+                            distance: '200m',
+                            status: 'Open until 8PM',
+                            imageUrl: 'https://via.placeholder.com/300x200/0D6E53/FFFFFF?text=Library',
+                          ),
+                          const SizedBox(width: 16),
+                          _buildPlaceCard(
+                            title: 'Food Court',
+                            distance: '450m',
+                            status: 'Busy',
+                            imageUrl: 'https://via.placeholder.com/300x200/F44336/FFFFFF?text=Food',
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 100), // Space for bottom navbar
+                  ],
+                ),
               ),
             ),
           ),
@@ -347,19 +351,28 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
 
   Widget _buildPlaceCard({required String title, required String distance, required String status, required String imageUrl}) {
     return Container(
-      width: 200,
+      width: 200, // This is your fixed width
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min, // Keep the row tight
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(imageUrl, width: 50, height: 50, fit: BoxFit.cover),
+            child: Image.network(
+              imageUrl,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              // Add an error builder to prevent crashes if the URL fails
+              errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey, width: 50, height: 50),
+            ),
           ),
           const SizedBox(width: 12),
+          // Expanded is crucial here to prevent the text from pushing the Row wider than 200px
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,6 +387,8 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
                 Text(
                   '$distance • $status',
                   style: const TextStyle(color: Colors.grey, fontSize: 11),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -382,7 +397,6 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
       ),
     );
   }
-
   Widget _buildNavItem(BuildContext context, {required IconData icon, required bool isSelected, required String route}) {
     return GestureDetector(
       onTap: () {
