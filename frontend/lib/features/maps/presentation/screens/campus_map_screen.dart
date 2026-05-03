@@ -56,15 +56,39 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
       return;
     } 
 
-    // Get current position
-    final position = await Geolocator.getCurrentPosition();
-    if (mounted) {
-      setState(() {
-        _currentPosition = LatLng(position.latitude, position.longitude);
-        _center = _currentPosition!;
-        _isLocating = false;
-      });
-      _mapController.move(_center, 15.0);
+    // Get current position with settings
+    try {
+      // Try to get last known position first (much faster)
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null && mounted) {
+        setState(() {
+          _currentPosition = LatLng(lastKnown.latitude, lastKnown.longitude);
+          _center = _currentPosition!;
+        });
+        _mapController.move(_center, 15.0);
+      }
+
+      // Then get fresh position with timeout (using direct parameters for better compatibility)
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPosition = LatLng(position.latitude, position.longitude);
+          _center = _currentPosition!;
+          _isLocating = false;
+        });
+        _mapController.move(_center, 15.0);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLocating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('GPS Error: ${e.toString()}. Try standing near a window.')),
+        );
+      }
     }
   }
 

@@ -25,6 +25,8 @@ dependencies:
   local_auth: ^2.2.0
 
   # Typography
+  google_fonts: ^6.2.1
+
   # Maps & Location
   flutter_map: ^7.0.2
   latlong2: ^0.9.1

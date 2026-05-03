@@ -30,7 +30,7 @@ class EventsScreen extends ConsumerWidget {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0D6E53), size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.home),
         ),
       ),
       body: Column(
