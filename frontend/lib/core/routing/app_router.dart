@@ -31,7 +31,10 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SignupScreen());
       
       case AppRoutes.biometrics:
-        return MaterialPageRoute(builder: (_) => const BiometricsScreen());
+        return MaterialPageRoute(
+          builder: (_) => const BiometricsScreen(),
+          settings: settings,
+        );
         
       case AppRoutes.home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
@@ -43,13 +46,19 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const AnnouncementsScreen());
 
       case AppRoutes.announcementDetails:
-        return MaterialPageRoute(builder: (_) => const AnnouncementDetailsScreen());
+        return MaterialPageRoute(
+          builder: (_) => const AnnouncementDetailsScreen(),
+          settings: settings,
+        );
 
       case AppRoutes.events:
         return MaterialPageRoute(builder: (_) => const EventsScreen());
 
       case AppRoutes.eventDetails:
-        return MaterialPageRoute(builder: (_) => const EventDetailsScreen());
+        return MaterialPageRoute(
+          builder: (_) => const EventDetailsScreen(),
+          settings: settings,
+        );
 
       case AppRoutes.feed:
         return MaterialPageRoute(builder: (_) => const CampusFeedScreen());

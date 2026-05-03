@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 
 import 'package:orbit/shared/widgets/primary_button.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -21,6 +22,7 @@ class _BiometricsScreenState extends ConsumerState<BiometricsScreen>
   late Animation<double> _pulseAnimation;
 
   final _repo = AuthRepository();
+  final LocalAuthentication auth = LocalAuthentication();
 
   @override
   void initState() {
@@ -43,7 +45,6 @@ class _BiometricsScreenState extends ConsumerState<BiometricsScreen>
   // ─── Actions ──────────────────────────────────────────────────────────────
 
   Future<void> _handleBiometricLogin() async {
-    // The email is passed as a route argument from LoginScreen
     final email = ModalRoute.of(context)?.settings.arguments as String?;
 
     if (email == null || email.isEmpty) {
@@ -51,18 +52,39 @@ class _BiometricsScreenState extends ConsumerState<BiometricsScreen>
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _isScanning = true;
-    });
-
-    // Simulate the fingerprint scan delay (1.5 seconds)
-    await Future.delayed(const Duration(milliseconds: 1500));
-
     try {
-      // The biometric token is a device-generated value.
-      // In a real app this would come from local_auth package.
-      // Here we simulate it with a stable, unique string.
+      // 1. Check if biometrics are available on this device
+      final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
+      final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+
+      if (!canAuthenticate) {
+        _showError('Biometric authentication is not available on this device.');
+        return;
+      }
+
+      setState(() {
+        _isScanning = true;
+      });
+
+      // 2. Trigger the system biometric prompt
+      final bool didAuthenticate = await auth.authenticate(
+        localizedReason: 'Authenticate to access your Orbit account',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+
+      if (!didAuthenticate) {
+        setState(() => _isScanning = false);
+        return;
+      }
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      // 3. On success, call backend biometric login
       const simulatedBiometricToken = 'orbit-biometric-device-token-secure';
 
       final token = await _repo.biometricLogin(
@@ -79,12 +101,14 @@ class _BiometricsScreenState extends ConsumerState<BiometricsScreen>
         Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
-      _showError(e.toString());
+      _showError('Authentication failed: ${e.toString()}');
     } finally {
-      if (mounted) setState(() {
-        _isLoading = false;
-        _isScanning = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isScanning = false;
+        });
+      }
     }
   }
 
