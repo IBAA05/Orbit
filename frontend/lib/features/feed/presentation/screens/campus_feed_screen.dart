@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../providers/feed_provider.dart';
+import '../../data/models/feed_post_model.dart';
 
-class CampusFeedScreen extends StatelessWidget {
+class CampusFeedScreen extends ConsumerWidget {
   const CampusFeedScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feedAsync = ref.watch(feedListProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       extendBody: true,
@@ -31,110 +36,122 @@ class CampusFeedScreen extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const Text(
-                'Campus Feed',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1A1A1A),
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Stay synchronized with the latest from Student Council.',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              // Filter Buttons
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0D6E53),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text('All', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(feedListProvider.future),
+        color: const Color(0xFF0D6E53),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                const Text(
+                  'Campus Feed',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1A1A1A),
+                    letterSpacing: -0.5,
                   ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text('For me', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Stay synchronized with the latest from Student Council.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey.shade600,
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              // Feed Items
-              _buildFeedCard(
-                tag: 'ANNOUNCEMENT',
-                tagBg: const Color(0xFF0D6E53),
-                tagColor: Colors.white,
-                time: '2m ago',
-                title: 'Library hours extended for Finals Week',
-                body: 'Good news! Starting Monday, the Main...',
-                isHighlight: true,
-                avatarContent: const Text('SC', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                avatarBg: const Color(0xFF0D6E53),
-              ),
-              const SizedBox(height: 16),
-              
-              _buildFeedCard(
-                tag: 'CAMPUS EVENT',
-                tagBg: const Color(0xFF90CAF9),
-                tagColor: const Color(0xFF0D47A1),
-                time: '1h ago',
-                title: 'Tech Fair 2024: Innovation Lab',
-                body: 'Join 50+ tech startups in the main courtyard. Free workshops on AI and...',
-                avatarContent: const Icon(Icons.rocket_launch, size: 16, color: Color(0xFF0D6E53)),
-                avatarBg: Colors.grey.shade200,
-              ),
-              const SizedBox(height: 16),
-
-              _buildFeedCard(
-                tag: 'CLUB NEWS',
-                tagBg: Colors.grey.shade300,
-                tagColor: Colors.grey.shade700,
-                time: '4h ago',
-                title: 'Weekly Sustainability Meeting',
-                body: 'Help us plan the campus garden expansion. New members are welco...',
-                avatarContent: const Text('SC', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                avatarBg: const Color(0xFF0D6E53),
-                imageUrl: 'https://via.placeholder.com/600x300/4CAF50/FFFFFF?text=Garden+Work',
-              ),
-              const SizedBox(height: 16),
-
-              _buildFeedCard(
-                tag: 'REMINDER',
-                tagBg: Colors.grey.shade300,
-                tagColor: Colors.grey.shade700,
-                time: 'Yesterday',
-                title: 'Course Registration Deadline',
-                body: 'Final call for Spring 2025 registration. Ensure your credits are locked in...',
-                avatarContent: const Text('SC', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                avatarBg: const Color(0xFF0D6E53),
-                readMore: true,
-                seenBy: 'Seen by 4,120 students',
-              ),
-              
-              const SizedBox(height: 120), // Bottom nav area
-            ],
+                ),
+                const SizedBox(height: 20),
+                
+                // Filter Buttons
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D6E53),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text('All', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text('For me', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // Feed Items
+                feedAsync.when(
+                  data: (posts) {
+                    if (posts.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: Column(
+                            children: [
+                              Icon(Icons.feed_outlined, size: 48, color: Colors.grey.shade400),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No feed items yet.',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: posts.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final post = posts[index];
+                        return _buildFeedCard(context, post);
+                      },
+                    );
+                  },
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40.0),
+                      child: CircularProgressIndicator(color: Color(0xFF0D6E53)),
+                    ),
+                  ),
+                  error: (err, stack) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40.0),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Failed to load feed. Check your connection.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          TextButton(
+                            onPressed: () => ref.refresh(feedListProvider),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 120), // Bottom nav area
+              ],
+            ),
           ),
         ),
       ),
@@ -171,25 +188,37 @@ class CampusFeedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeedCard({
-    required String tag,
-    required Color tagBg,
-    required Color tagColor,
-    required String time,
-    required String title,
-    required String body,
-    required Widget avatarContent,
-    required Color avatarBg,
-    bool isHighlight = false,
-    String? imageUrl,
-    bool readMore = false,
-    String? seenBy,
-  }) {
+  Widget _buildFeedCard(BuildContext context, FeedPostModel post) {
+    Color tagBg;
+    Color tagColor;
+
+    switch (post.tag) {
+      case 'ANNOUNCEMENT':
+        tagBg = const Color(0xFF0D6E53);
+        tagColor = Colors.white;
+        break;
+      case 'CAMPUS EVENT':
+        tagBg = const Color(0xFF90CAF9);
+        tagColor = const Color(0xFF0D47A1);
+        break;
+      case 'CLUB NEWS':
+        tagBg = Colors.grey.shade200;
+        tagColor = Colors.grey.shade700;
+        break;
+      case 'REMINDER':
+        tagBg = Colors.amber.shade100;
+        tagColor = Colors.amber.shade900;
+        break;
+      default:
+        tagBg = Colors.grey.shade200;
+        tagColor = Colors.grey.shade700;
+    }
+
     return Container(
       decoration: BoxDecoration(
-        color: isHighlight ? const Color(0xFFE8F5E9) : Colors.white,
+        color: post.isPinned ? const Color(0xFFE8F5E9) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: isHighlight ? const Border(left: BorderSide(color: Color(0xFF0D6E53), width: 4)) : null,
+        border: post.isPinned ? const Border(left: BorderSide(color: Color(0xFF0D6E53), width: 4)) : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -212,7 +241,7 @@ class CampusFeedScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  tag,
+                  post.tag,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -222,7 +251,7 @@ class CampusFeedScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                time,
+                post.timeAgo,
                 style: const TextStyle(
                   fontSize: 11,
                   color: Colors.grey,
@@ -238,12 +267,15 @@ class CampusFeedScreen extends StatelessWidget {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(
-                  color: avatarBg,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0D6E53),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: avatarContent,
+                child: Text(
+                  post.authorLabel.substring(0, 1),
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -251,7 +283,7 @@ class CampusFeedScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      post.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -261,44 +293,38 @@ class CampusFeedScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      body,
+                      post.body,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade800,
                         height: 1.5,
                       ),
                     ),
-                    if (readMore) ...[
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Read more',
-                        style: TextStyle(
-                          color: Color(0xFF0D6E53),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                    if (imageUrl != null) ...[
+                    if (post.imageUrl != null && post.imageUrl!.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          imageUrl,
+                          post.imageUrl!,
                           height: 140,
                           width: double.infinity,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            height: 140,
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.broken_image, color: Colors.grey),
+                          ),
                         ),
                       ),
                     ],
-                    if (seenBy != null) ...[
+                    if (post.seenCount > 0) ...[
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           const Icon(Icons.remove_red_eye_outlined, size: 14, color: Colors.grey),
                           const SizedBox(width: 4),
                           Text(
-                            seenBy,
+                            'Seen by ${post.seenCount} students',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,

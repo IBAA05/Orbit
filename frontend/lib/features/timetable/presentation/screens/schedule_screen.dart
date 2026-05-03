@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../providers/timetable_provider.dart';
+import '../../data/models/timetable_model.dart';
 
-class ScheduleScreen extends StatelessWidget {
+class ScheduleScreen extends ConsumerWidget {
   const ScheduleScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedDay = ref.watch(selectedDayProvider);
+    final scheduleAsync = ref.watch(scheduleListProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFFCFCFC), // Very light grey base
       appBar: AppBar(
@@ -64,15 +70,15 @@ class ScheduleScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                _buildDayPill('Mon', isSelected: true),
+                _buildDayPill(ref, 'Mon', isSelected: selectedDay == 'Mon'),
                 const SizedBox(width: 12),
-                _buildDayPill('Tue', isSelected: false),
+                _buildDayPill(ref, 'Tue', isSelected: selectedDay == 'Tue'),
                 const SizedBox(width: 12),
-                _buildDayPill('Wed', isSelected: false),
+                _buildDayPill(ref, 'Wed', isSelected: selectedDay == 'Wed'),
                 const SizedBox(width: 12),
-                _buildDayPill('Thu', isSelected: false),
+                _buildDayPill(ref, 'Thu', isSelected: selectedDay == 'Thu'),
                 const SizedBox(width: 12),
-                _buildDayPill('Fri', isSelected: false),
+                _buildDayPill(ref, 'Fri', isSelected: selectedDay == 'Fri'),
               ],
             ),
           ),
@@ -80,41 +86,56 @@ class ScheduleScreen extends StatelessWidget {
           
           // Timeline and Schedule items
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _buildTimelineCard(
-                    time: '09:00',
-                    endTime: '10:30 AM',
-                    title: 'Advanced\nMacroeconomics',
-                    location: 'Room 402 • Hall A',
-                    person: 'Dr. Alistair Vance',
-                    cardLineColor: const Color(0xFF0D6E53),
-                    locationIcon: Icons.door_front_door_outlined,
+            child: RefreshIndicator(
+              onRefresh: () => ref.refresh(scheduleListProvider.future),
+              color: const Color(0xFF0D6E53),
+              child: scheduleAsync.when(
+                data: (entries) {
+                  if (entries.isEmpty) {
+                    return ListView(
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                        const Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.calendar_today_outlined, size: 48, color: Colors.grey),
+                              SizedBox(height: 16),
+                              Text('No classes scheduled for today.', style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      return _buildTimelineCard(
+                        entry: entry,
+                        isLast: index == entries.length - 1,
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF0D6E53)),
+                ),
+                error: (err, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
+                      const Text('Failed to load schedule'),
+                      TextButton(
+                        onPressed: () => ref.refresh(scheduleListProvider),
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
-                  _buildTimelineCard(
-                    time: '11:15',
-                    endTime: '12:45 PM',
-                    title: 'Digital Ethics & Law',
-                    location: 'Innovation Lab • Floor 2',
-                    person: 'Prof. Sarah Jenkins',
-                    cardLineColor: const Color(0xFF1E659A), // Blue
-                    locationIcon: Icons.business_outlined, // Building icon
-                  ),
-                  _buildTimelineCard(
-                    time: '14:00',
-                    endTime: '03:30 PM',
-                    title: 'Research Seminar',
-                    location: 'Main Library • Seminar Room\nC',
-                    person: 'Guest Lecturer: Dr. M. Zhao',
-                    cardLineColor: Colors.grey.shade400,
-                    backgroundColor: const Color(0xFFF3F4F6), // Greyish bg
-                    locationIcon: Icons.location_on_outlined,
-                    isLast: true,
-                  ),
-                  const SizedBox(height: 80), // Fab spacing
-                ],
+                ),
               ),
             ),
           ),
@@ -129,35 +150,41 @@ class ScheduleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDayPill(String day, {required bool isSelected}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF0D6E53) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Text(
-        day,
-        style: TextStyle(
-          color: isSelected ? Colors.white : const Color(0xFF424242),
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          fontSize: 15,
+  Widget _buildDayPill(WidgetRef ref, String day, {required bool isSelected}) {
+    return GestureDetector(
+      onTap: () {
+        ref.read(selectedDayProvider.notifier).state = day;
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0D6E53) : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Text(
+          day,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF424242),
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 15,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTimelineCard({
-    required String time,
-    required String endTime,
-    required String title,
-    required String location,
-    required String person,
-    required Color cardLineColor,
-    required IconData locationIcon,
-    Color backgroundColor = Colors.white,
+    required TimetableEntryModel entry,
     bool isLast = false,
   }) {
+    // Convert hex string to Color object
+    Color cardColor;
+    try {
+      cardColor = Color(int.parse(entry.colorHex.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      cardColor = const Color(0xFF0D6E53);
+    }
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -168,9 +195,9 @@ class ScheduleScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const SizedBox(height: 12), // Align time strictly with top of card content
+                const SizedBox(height: 12),
                 Text(
-                  time,
+                  entry.startTime,
                   style: const TextStyle(
                     color: Color(0xFF0D6E53),
                     fontWeight: FontWeight.w800,
@@ -178,7 +205,7 @@ class ScheduleScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  endTime,
+                  entry.endTime,
                   style: const TextStyle(
                     color: Color(0xFF9E9E9E),
                     fontSize: 10,
@@ -203,20 +230,18 @@ class ScheduleScreen extends StatelessWidget {
             child: Container(
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: backgroundColor,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border(
-                  left: BorderSide(color: cardLineColor, width: 4),
+                  left: BorderSide(color: cardColor, width: 4),
                 ),
-                boxShadow: backgroundColor == Colors.white
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -229,7 +254,7 @@ class ScheduleScreen extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            title,
+                            entry.subject,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -245,39 +270,41 @@ class ScheduleScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(locationIcon, size: 16, color: const Color(0xFF666666)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            location,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF424242),
+                    if (entry.location != null)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.door_front_door_outlined, size: 16, color: Color(0xFF666666)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              entry.location!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF424242),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                     const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.person_outline, size: 16, color: Color(0xFF666666)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            person,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF424242),
+                    if (entry.instructor != null)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.person_outline, size: 16, color: Color(0xFF666666)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              entry.instructor!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF424242),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                   ],
                 ),
               ),

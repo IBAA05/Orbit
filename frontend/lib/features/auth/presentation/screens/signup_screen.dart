@@ -1,16 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:orbit/shared/widgets/primary_button.dart';
 import '../widgets/custom_text_field.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../providers/auth_provider.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  // ─── Controllers ──────────────────────────────────────────────────────────
+  final _nameController = TextEditingController();
+  final _studentIdController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  // ─── State ────────────────────────────────────────────────────────────────
   bool _agreedToTerms = false;
+  bool _isLoading = false;
+
+  final _repo = AuthRepository();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _studentIdController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // ─── Actions ──────────────────────────────────────────────────────────────
+
+  Future<void> _handleRegister() async {
+    if (!_agreedToTerms) {
+      _showError('Please agree to the Terms of Service first.');
+      return;
+    }
+    final name = _nameController.text.trim();
+    final studentId = _studentIdController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showError('Please fill all required fields.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await _repo.register(
+        fullName: name,
+        email: email,
+        studentId: studentId,
+        password: password,
+      );
+
+      ref.read(authProvider.notifier).setAuthenticated(
+            fullName: token.fullName,
+            isStaff: token.isStaff,
+          );
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
 
   Widget _buildLabel(String text) {
     return Padding(
@@ -26,6 +102,8 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -99,106 +177,40 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 4),
                   const Text(
                     'Join the campus elite network.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                    ),
+                    style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
                   ),
                   const SizedBox(height: 24),
 
                   _buildLabel('FULL NAME'),
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: 'Alex Sterling',
                     prefixIcon: Icons.person_outline,
+                    controller: _nameController,
                   ),
                   const SizedBox(height: 16),
 
                   _buildLabel('STUDENT ID'),
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: '2024-XXXXX',
                     prefixIcon: Icons.badge_outlined,
+                    controller: _studentIdController,
                   ),
                   const SizedBox(height: 16),
 
                   _buildLabel('UNIVERSITY EMAIL'),
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: 'sterling@university.edu',
                     prefixIcon: Icons.email_outlined,
+                    controller: _emailController,
                   ),
                   const SizedBox(height: 16),
 
                   _buildLabel('PASSWORD'),
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: '••••••••••••',
                     isPassword: true,
                     prefixIcon: Icons.lock_outline,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Password Strength Indicator
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0D6E53),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0D6E53),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0D6E53),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0E0E0),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Strong',
-                        style: TextStyle(
-                          color: Color(0xFF0D6E53),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        'At least 8 characters',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                    controller: _passwordController,
                   ),
                   const SizedBox(height: 24),
 
@@ -211,14 +223,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         height: 24,
                         child: Checkbox(
                           value: _agreedToTerms,
-                          onChanged: (val) {
-                            setState(() {
-                              _agreedToTerms = val ?? false;
-                            });
-                          },
+                          onChanged: (val) =>
+                              setState(() => _agreedToTerms = val ?? false),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                              borderRadius: BorderRadius.circular(4)),
                           activeColor: const Color(0xFF0D6E53),
                         ),
                       ),
@@ -257,29 +265,23 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Create Account Button — now calls the real API
                   PrimaryButton(
-                    text: 'Create Account',
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/home');
-                    },
+                    text: _isLoading ? 'Creating Account...' : 'Create Account',
+                    onPressed: _isLoading ? () {} : _handleRegister,
+                    isLoading: _isLoading,
                   ),
                   const SizedBox(height: 24),
 
-                  // Footer link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
                         'Already have an account? ',
-                        style: TextStyle(
-                          color: Color(0xFF666666),
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Color(0xFF666666), fontSize: 14),
                       ),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context); // Go back to login
-                        },
+                        onTap: () => Navigator.pop(context),
                         child: const Text(
                           'Sign In',
                           style: TextStyle(

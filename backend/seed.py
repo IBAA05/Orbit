@@ -19,6 +19,8 @@ from models.timetable_model import TimetableEntryModel
 from models.campus_poi_model import CampusPOIModel
 from core.security import hash_password
 
+# ─── Drop and Recreate tables (Clean start) ────────────────────────────────────
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
