@@ -25,4 +25,15 @@ class EventRepository {
   Future<void> registerForEvent(int id) async {
     await _client.post('/events/$id/register');
   }
+
+  Future<void> createEvent(Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post('/events/', data: data);
+      if (response.statusCode != 201) {
+        throw Exception('Failed to create event');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

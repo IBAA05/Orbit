@@ -25,4 +25,15 @@ class AnnouncementRepository {
   Future<void> markAsRead(int id) async {
     await _client.post('/announcements/$id/read');
   }
+
+  Future<void> createAnnouncement(Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post('/announcements/', data: data);
+      if (response.statusCode != 201) {
+        throw Exception('Failed to create announcement');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

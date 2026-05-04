@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:orbit/shared/widgets/primary_button.dart';
 import 'package:orbit/features/auth/presentation/widgets/custom_text_field.dart';
+import 'package:orbit/features/announcements/data/repositories/announcement_repository.dart';
 
 class AdminPublishAnnouncementScreen extends StatefulWidget {
   const AdminPublishAnnouncementScreen({super.key});
@@ -14,6 +15,7 @@ class AdminPublishAnnouncementScreen extends StatefulWidget {
 class _AdminPublishAnnouncementScreenState extends State<AdminPublishAnnouncementScreen> {
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
+  final _repo = AnnouncementRepository();
   String _selectedCategory = 'Academic';
   File? _selectedImage;
   bool _isPublishing = false;
@@ -114,18 +116,34 @@ class _AdminPublishAnnouncementScreenState extends State<AdminPublishAnnouncemen
 
     setState(() => _isPublishing = true);
     
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (mounted) {
-      setState(() => _isPublishing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Announcement Published Successfully!'),
-          backgroundColor: Color(0xFF0D6E53),
-        ),
-      );
-      Navigator.pop(context);
+    try {
+      // REAL API CALL: Publish the announcement to the server
+      await _repo.createAnnouncement({
+        'title': _titleController.text,
+        'body': _bodyController.text,
+        'category': _selectedCategory,
+        'target_audience': 'All',
+        'is_published': true,
+      });
+
+      if (mounted) {
+        setState(() => _isPublishing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Announcement & Notifications Published!'),
+            backgroundColor: Color(0xFF0D6E53),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isPublishing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -237,7 +255,7 @@ class _AdminPublishAnnouncementScreenState extends State<AdminPublishAnnouncemen
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F6FA),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE0E0E0), style: BorderStyle.none), // Mock dash
+                    border: Border.all(color: const Color(0xFFE0E0E0), style: BorderStyle.none),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

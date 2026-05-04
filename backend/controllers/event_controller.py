@@ -220,6 +220,36 @@ def create_event(
     db.add(event)
     db.commit()
     db.refresh(event)
+    
+    # OS Concept: Simulate a Push Notification broadcast
+    # Create a notification record for every user (excluding the author)
+    from models.notification_model import NotificationModel
+    users = db.query(UserModel).filter(UserModel.id != current_admin.id).all()
+    for user in users:
+        new_notif = NotificationModel(
+            user_id=user.id,
+            title="New Event: " + event.title,
+            body=f"Register now! {event.title} is happening at {event.location}.",
+            icon_type="event",
+            is_read=False,
+            deep_link_route="/events"
+        )
+        db.add(new_notif)
+    # OS Concept: Simulate a Cross-Feature Sync (Double Posting)
+    # Create an Announcement record so it appears in the student's feed
+    from models.announcement_model import AnnouncementModel
+    new_announcement = AnnouncementModel(
+        title=f"New Event: {event.title}",
+        body=f"We are excited to announce a new {event.event_type} at {event.location}. {event.description}",
+        category="Event",
+        target_audience="All",
+        is_published=True,
+        author_id=current_admin.id
+    )
+    db.add(new_announcement)
+    
+    db.commit()
+
     return _to_response(event)
 
 

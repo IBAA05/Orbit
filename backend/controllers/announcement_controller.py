@@ -18,11 +18,10 @@ router = APIRouter(prefix="/announcements", tags=["📢 Announcements"])
 
 
 def _build_response(a: AnnouncementModel) -> dict:
-    return {
-        **a.__dict__,
-        "read_count": len(a.read_receipts) if a.read_receipts else 0,
-        "author": a.author,
-    }
+    res = {c.name: getattr(a, c.name) for c in a.__table__.columns}
+    res["read_count"] = len(a.read_receipts) if a.read_receipts else 0
+    res["author"] = a.author
+    return res
 
 
 @router.get(
@@ -115,6 +114,22 @@ def create_announcement(
     db.add(a)
     db.commit()
     db.refresh(a)
+
+    # OS Concept: Broadcast a System-Wide Notification
+    from models.notification_model import NotificationModel
+    users = db.query(UserModel).filter(UserModel.id != current_admin.id).all()
+    for user in users:
+        new_notif = NotificationModel(
+            user_id=user.id,
+            title="Update: " + a.title,
+            body=a.body[:100] + "...",
+            icon_type="alert" if a.category == "Urgent" else "info",
+            is_read=False,
+            deep_link_route=f"/announcement/{a.id}"
+        )
+        db.add(new_notif)
+    db.commit()
+
     return _build_response(a)
 
 

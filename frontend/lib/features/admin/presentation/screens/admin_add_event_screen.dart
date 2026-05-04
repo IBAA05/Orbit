@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:orbit/shared/widgets/primary_button.dart';
 import 'package:orbit/features/auth/presentation/widgets/custom_text_field.dart';
+import 'package:orbit/features/events/data/repositories/event_repository.dart';
 
 class AdminAddEventScreen extends StatefulWidget {
   const AdminAddEventScreen({super.key});
@@ -15,6 +16,7 @@ class _AdminAddEventScreenState extends State<AdminAddEventScreen> {
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
   final _descController = TextEditingController();
+  final _repo = EventRepository();
   
   File? _eventPoster;
   final ImagePicker _picker = ImagePicker();
@@ -129,11 +131,45 @@ class _AdminAddEventScreenState extends State<AdminAddEventScreen> {
             PrimaryButton(
               text: _isLoading ? 'CREATING...' : 'CREATE EVENT',
               onPressed: () async {
+                if (_titleController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a title')));
+                  return;
+                }
+                
                 setState(() => _isLoading = true);
-                await Future.delayed(const Duration(seconds: 2));
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Event Created!')));
+                
+                try {
+                  // REAL API CALL: Create the event on the server
+                  await _repo.createEvent({
+                    'title': _titleController.text,
+                    'location': _locationController.text,
+                    'description': _descController.text,
+                    'event_date': DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+                    'capacity': 100,
+                    'event_type': 'Social',
+                    'is_published': true,
+                  });
+
+                  if (mounted) {
+                    setState(() => _isLoading = false);
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('✅ Event created! Notifications broadcasted to students.'),
+                        backgroundColor: Color(0xFF0D6E53),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    setState(() => _isLoading = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
                 }
               },
               isLoading: _isLoading,
