@@ -17,4 +17,5 @@ class AppRoutes {
   static const String map = '/map';
   static const String adminEventManagement = '/admin/events';
   static const String adminPublishAnnouncement = '/admin/announcements';
+  static const String adminAddEvent = '/admin/add_event';
 }

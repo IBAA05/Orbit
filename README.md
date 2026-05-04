@@ -1,47 +1,97 @@
-🔐 Auth (/auth)
-Frontend Screen	Action	Backend Endpoint	Status
-login_screen.dart	Enter email + password → Sign In	POST /auth/login	✅
-signup_screen.dart	Fill form → Create Account	POST /auth/register	✅
-biometrics_screen.dart	Use fingerprint	POST /auth/biometric-login	✅
-Any screen	Logout button	POST /auth/logout	✅
-📢 Announcements (/announcements)
-Frontend Screen	Action	Backend Endpoint	Status
-announcements_screen.dart	Show list of announcements	GET /announcements/	✅
-announcement_details_screen.dart	Open one announcement	GET /announcements/{id}	✅
-announcement_details_screen.dart	Mark as read (badge disappears)	POST /announcements/{id}/read	✅
-admin_publish_announcement_screen.dart	Admin creates new announcement	POST /announcements/	✅
-🎉 Events (/events)
-Frontend Screen	Action	Backend Endpoint	Status
-events_screen.dart	Show list of events	GET /events/	✅
-event_details_screen.dart	Open event details	GET /events/{id}	✅
-event_details_screen.dart	Register for event	POST /events/{id}/register	✅
-event_details_screen.dart	Cancel registration	DELETE /events/{id}/register	✅
-event_details_screen.dart	Upload a photo note (camera)	POST /events/{id}/photos	✅
-admin_event_management_screen.dart	Admin creates/edits event	POST /events/	✅
-⚡ Campus Feed (/feed)
-Frontend Screen	Action	Backend Endpoint	Status
-campus_feed_screen.dart	Load all posts	GET /feed/	✅
-campus_feed_screen.dart	Open a post (auto increments "seen")	GET /feed/{id}	✅
-🔔 Notifications (/notifications)
-Frontend Screen	Action	Backend Endpoint	Status
-notifications_screen.dart	Load my notifications	GET /notifications/	✅
-notifications_screen.dart	Tap to mark as read	PUT /notifications/{id}/read	✅
-notifications_screen.dart	"Mark all read" button	PUT /notifications/read-all	✅
-notifications_screen.dart	Swipe to delete	DELETE /notifications/{id}	✅
-📅 Timetable (/timetable)
-Frontend Screen	Action	Backend Endpoint	Status
-schedule_screen.dart	Load my weekly schedule	GET /timetable/	✅
-schedule_screen.dart	Filter by day (Mon, Tue...)	GET /timetable/?day=Mon	✅
-schedule_screen.dart	Export schedule to JSON file	GET /timetable/export	✅
-🗺️ Campus Map (/map)
-Frontend Screen	Action	Backend Endpoint	Status
-campus_map_screen.dart	Load all campus POIs (pins on map)	GET /map/pois	✅
-campus_map_screen.dart	Tap a pin to see POI details	GET /map/pois/{id}	✅
-👤 Profile (/users)
-Frontend Screen	Action	Backend Endpoint	Status
-profile_screen.dart	Load my name, dept, initials	GET /users/me	✅
-profile_screen.dart	Toggle dark mode / notifications	PUT /users/me	✅
-profile_screen.dart	Change password	PUT /users/me/password	✅
-profile_screen.dart	Upload a profile picture	POST /users/me/avatar	❌ Missing
-Summary
-You have ~25 fully linkable features right now. The only truly missing backend piece is the profile picture upload endpoint which we planned to add later.
+# Orbit — SmartCampus Companion 🚀
+
+Orbit is a premium, feature-rich mobile application designed to unify the university experience for students and staff. Built with **Flutter** and backed by a **FastAPI** server, it serves as a master demonstration of **Mobile Operating Systems** concepts.
+
+---
+
+## 📱 Mobile OS Concepts & Implementation
+
+This project implements core hardware and system-level integrations required in modern mobile development:
+
+| OS Concept | Tech Used | Feature Implementation |
+| :--- | :--- | :--- |
+| **Biometric Security** | `local_auth` | **Fingerprint Login**: Secure hardware-level authentication before accessing the dashboard. |
+| **Geolocation & GPS** | `geolocator` | **Live Map Tracking**: Real-time GPS sensing with a pulsing user marker on the campus map. |
+| **System Permissions** | `PermissionHandler` | **Dynamic Requests**: Graceful runtime handling of Camera, Location, and Storage permissions. |
+| **Hardware Access** | `image_picker` | **Media Upload**: Direct access to System Camera & File Gallery for admin publishing. |
+| **Secure Persistence** | `flutter_secure_storage` | **Token Sandboxing**: Encrypted storage of JWT sessions, isolated from other apps. |
+| **Background Refresh** | `Dio` / `Async` | **Non-blocking I/O**: Fetching announcements and feed data without freezing the UI. |
+
+---
+
+## 🛠️ Complete Feature Set
+
+### 1. Unified Dashboard
+- **Greeting System**: Personalized welcome messages based on logged-in user data.
+- **Dynamic Access Control**: Automatically detects `isStaff` role to display the exclusive **Admin Panel**.
+- **Contextual Cards**: Real-time count of today's classes and unread alerts.
+
+### 2. Admin Command Center (Staff)
+- **High-Priority Alerts**: Publish urgent announcements to the entire campus.
+- **Event Creator**: Organize workshops or seminars.
+- **Hardware Integration**: Use the **Camera** to capture flyers or **File Picker** to upload digital event posters.
+
+### 3. Interactive Campus Map
+- **GPS Localization**: "Find Me" feature that re-centers the map on your exact coordinates.
+- **Points of Interest (POIs)**: Visual markers for Libraries, Labs, and Cafeterias.
+- **OpenStreetMap Integration**: No-latency map tiles via `latlong2`.
+
+### 4. Campus Social Feed
+- **Global Feed**: A real-time stream of updates from student societies.
+- **Pinned Posts**: Important notices stay at the top.
+- **Seen Counters**: Track engagement on different posts.
+
+### 5. Smart Schedule (Timetable)
+- **Weekly Planner**: Visual class schedule items with custom color coding.
+- **Subject Details**: Instructor names and room locations for every slot.
+
+---
+
+## 🏗️ Technical Architecture
+
+- **Frontend**: Flutter (MVVM architecture with Riverpod for state management).
+- **Backend**: FastAPI (Python) using a RESTful architecture.
+- **Database**: SQLite (SQLAlchemy) for robust local/server data handling.
+- **Networking**: `Dio` client with interceptors for automatic JWT header attachment.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Flutter SDK (3.3.0+)
+- Python 3.10+
+- Android Emulator / Physical Device
+
+### 1. Setup the Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python seed.py            # IMPORTANT: Populates demo users & data
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+### 2. Setup the Frontend
+```bash
+cd frontend
+# If using a physical device, bridge the ports:
+adb reverse tcp:8000 tcp:8000 
+flutter pub get
+flutter run
+```
+
+---
+
+## 👥 Demo Credentials
+
+Use these accounts to test the different permission levels:
+
+| User Role | Email | Password | Exclusive Features |
+| :--- | :--- | :--- | :--- |
+| **Staff Admin** | `admin@university.edu` | `Admin123!` | Camera Access, File Uploads, Admin Panel |
+| **Student** | `ibaa@university.edu` | `Student123!` | Personal Feed, Timetable, Register for Events |
+
+---
+*Created for the 4th Year Engineering Mobile OS Curriculum.*

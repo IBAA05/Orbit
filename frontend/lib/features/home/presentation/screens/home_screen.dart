@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:orbit/core/routing/app_routes.dart';
+import 'package:orbit/features/auth/presentation/providers/auth_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      extendBody: true, // Allows scrolling behind the bottom navigation bar
+      extendBody: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -31,8 +35,11 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 16.0, left: 8.0),
             child: CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.grey.shade300,
-              child: const Icon(Icons.person, size: 20, color: Colors.white),
+              backgroundColor: const Color(0xFF0D6E53),
+              child: Text(
+                (authState.fullName?.isNotEmpty ?? false) ? authState.fullName![0].toUpperCase() : 'U',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -44,9 +51,9 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
-              const Text(
-                'Good morning, Ibaa 👋',
-                style: TextStyle(
+              Text(
+                'Good morning, ${authState.fullName?.split(' ')[0] ?? 'User'} 👋',
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFF1A1A1A),
@@ -63,6 +70,74 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+
+              // ADMIN DASHBOARD BUTTON (Only shows if isStaff is true)
+              if (authState.isStaff)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0D6E53), Color(0xFF157053)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0D6E53).withValues(alpha: 0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ADMIN PANEL',
+                              style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Publish Alerts & Tools',
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => Navigator.pushNamed(context, AppRoutes.adminPublishAnnouncement),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF0D6E53),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            child: const Text('ALERT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pushNamed(context, AppRoutes.adminAddEvent),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Colors.white70),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            child: const Text('EVENT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
               // Summary Cards
               Row(
@@ -91,7 +166,7 @@ class HomeScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D6E53),
+                  color: authState.isStaff ? const Color(0xFF1E659A) : const Color(0xFF0D6E53),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Column(
@@ -208,7 +283,7 @@ class HomeScreen extends StatelessWidget {
                     'Join us for a week of celebration, talent, and culture starting next month. Registrati...',
               ),
 
-              const SizedBox(height: 120), // Bottom padding for floating nav bar
+              const SizedBox(height: 120),
             ],
           ),
         ),
@@ -438,25 +513,6 @@ class HomeScreen extends StatelessWidget {
               color: Color(0xFF666666),
               height: 1.4,
             ),
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            children: [
-              Text(
-                'Read full announcement',
-                style: TextStyle(
-                  color: Color(0xFF0D6E53),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(width: 4),
-              Icon(
-                Icons.arrow_forward,
-                color: Color(0xFF0D6E53),
-                size: 16,
-              ),
-            ],
           ),
         ],
       ),

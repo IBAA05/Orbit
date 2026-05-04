@@ -11,6 +11,8 @@ import '../../features/events/presentation/screens/event_details_screen.dart';
 import '../../features/feed/presentation/screens/campus_feed_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/admin/presentation/screens/admin_publish_announcement_screen.dart';
+import '../../features/admin/presentation/screens/admin_add_event_screen.dart';
 import '../../features/maps/presentation/screens/campus_map_screen.dart';
 import '../../features/timetable/presentation/screens/schedule_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
@@ -71,6 +73,12 @@ class AppRouter {
 
       case AppRoutes.map:
         return MaterialPageRoute(builder: (_) => const CampusMapScreen());
+
+      case AppRoutes.adminPublishAnnouncement:
+        return MaterialPageRoute(builder: (_) => const AdminPublishAnnouncementScreen());
+
+      case AppRoutes.adminAddEvent:
+        return MaterialPageRoute(builder: (_) => const AdminAddEventScreen());
         
       default:
         return MaterialPageRoute(
