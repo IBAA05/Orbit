@@ -4,6 +4,19 @@ import '../models/announcement_model.dart';
 class AnnouncementRepository {
   final _client = ApiClient.instance;
 
+  Future<AnnouncementModel> getAnnouncementById(int id) async {
+    try {
+      final response = await _client.get('/announcements/$id');
+      if (response.statusCode == 200) {
+        return AnnouncementModel.fromJson(response.data);
+      } else {
+        throw Exception('Failed to load announcement details');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<List<AnnouncementModel>> getAnnouncements({String? category}) async {
     try {
       final response = await _client.get(

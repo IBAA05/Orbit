@@ -50,6 +50,8 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         access_token=token,
         user_id=user.id,
         full_name=user.full_name,
+        email=user.email,
+        student_id=user.student_id,
         is_staff=user.is_staff,
     )
 
@@ -75,6 +77,8 @@ def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
         access_token=token,
         user_id=user.id,
         full_name=user.full_name,
+        email=user.email,
+        student_id=user.student_id,
         is_staff=user.is_staff,
     )
 
@@ -102,6 +106,8 @@ def biometric_login(payload: BiometricLoginRequest, db: Session = Depends(get_db
         access_token=token,
         user_id=user.id,
         full_name=user.full_name,
+        email=user.email,
+        student_id=user.student_id,
         is_staff=user.is_staff,
     )
 

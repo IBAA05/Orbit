@@ -43,6 +43,8 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user_id: int
     full_name: str
+    email: str
+    student_id: Optional[str] = None
     is_staff: bool
 
 

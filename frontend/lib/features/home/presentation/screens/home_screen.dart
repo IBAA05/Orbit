@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:orbit/core/routing/app_routes.dart';
 import 'package:orbit/features/auth/presentation/providers/auth_provider.dart';
+import 'package:orbit/features/announcements/presentation/providers/announcement_provider.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -9,6 +11,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final announcementsAsync = ref.watch(announcementListProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -33,12 +36,15 @@ class HomeScreen extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0, left: 8.0),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFF0D6E53),
-              child: Text(
-                (authState.fullName?.isNotEmpty ?? false) ? authState.fullName![0].toUpperCase() : 'U',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+            child: GestureDetector(
+              onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(0xFF0D6E53),
+                child: Text(
+                  (authState.fullName?.isNotEmpty ?? false) ? authState.fullName![0].toUpperCase() : 'U',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
               ),
             ),
           ),
@@ -61,9 +67,9 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Monday, October 14th',
-                style: TextStyle(
+              Text(
+                DateFormat('EEEE, MMM dd').format(DateTime.now()),
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1E659A),
@@ -71,7 +77,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // ADMIN DASHBOARD BUTTON (Only shows if isStaff is true)
+              // ADMIN DASHBOARD BUTTON
               if (authState.isStaff)
                 Container(
                   margin: const EdgeInsets.only(bottom: 24),
@@ -152,8 +158,8 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildSummaryCard(
-                      title: 'UNREAD ALERTS',
-                      value: '12',
+                      title: 'NOTIFICATIONS',
+                      value: '•',
                       borderColor: const Color(0xFF1E659A),
                     ),
                   ),
@@ -233,7 +239,6 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // Schedule Items
               _buildScheduleCard(
                 time: '09:00 - 10:30',
                 title: 'Advanced Algorithms',
@@ -252,35 +257,41 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 32),
 
               // Latest Announcements Header
-              const Text(
-                'Latest Announcements',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1A1A),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Latest Announcements',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.announcements),
+                    child: const Text('See All', style: TextStyle(color: Color(0xFF0D6E53))),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-              // Announcement Items
-              _buildAnnouncementCard(
-                tag: 'ACADEMIC',
-                tagColor: const Color(0xFF1E659A),
-                tagBackground: const Color(0xFFE3F2FD),
-                time: '2 hours ago',
-                title: 'Midterm Examination Schedule Released',
-                body:
-                    'The schedule for the upcoming Fall Semester midterms is now available on th...',
-              ),
-              const SizedBox(height: 16),
-              _buildAnnouncementCard(
-                tag: 'EVENT',
-                tagColor: const Color(0xFFB71C1C),
-                tagBackground: const Color(0xFFFFEBEE),
-                time: 'Yesterday',
-                title: 'Campus Annual Cultural Festival 2024',
-                body:
-                    'Join us for a week of celebration, talent, and culture starting next month. Registrati...',
+              // REAL Announcements List
+              announcementsAsync.when(
+                data: (list) {
+                  final recent = list.take(3).toList();
+                  if (recent.isEmpty) {
+                    return const Center(child: Text('No announcements yet.'));
+                  }
+                  return Column(
+                    children: recent.map((a) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _buildRealAnnouncementCard(context, a),
+                    )).toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, s) => Text('Error loading feed: $e'),
               ),
 
               const SizedBox(height: 120),
@@ -321,76 +332,105 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryCard({
-    required String title,
-    required String value,
-    required Color borderColor,
-  }) {
+  Widget _buildRealAnnouncementCard(BuildContext context, dynamic a) {
+    Color tagColor;
+    Color tagBg;
+    
+    switch (a.category) {
+      case 'Urgent':
+        tagColor = Colors.red;
+        tagBg = Colors.red.withValues(alpha: 0.1);
+        break;
+      case 'Academic':
+        tagColor = const Color(0xFF0D6E53);
+        tagBg = const Color(0xFF0D6E53).withValues(alpha: 0.1);
+        break;
+      default:
+        tagColor = Colors.blue;
+        tagBg = Colors.blue.withValues(alpha: 0.1);
+    }
+
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, AppRoutes.announcementDetails, arguments: a.id),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: tagBg, borderRadius: BorderRadius.circular(12)),
+                  child: Text(
+                    a.category.toUpperCase(),
+                    style: TextStyle(color: tagColor, fontSize: 10, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  DateFormat('MMM dd').format(a.createdAt),
+                  style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              a.title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              a.body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF666666), height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({required String title, required String value, required Color borderColor}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: borderColor, width: 4),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border(left: BorderSide(color: borderColor, width: 4)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF666666),
-              letterSpacing: 0.5,
-            ),
-          ),
+          Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF666666), letterSpacing: 0.5)),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
-              letterSpacing: -1,
-            ),
-          ),
+          Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF1A1A1A), letterSpacing: -1)),
         ],
       ),
     );
   }
 
-  Widget _buildScheduleCard({
-    required String time,
-    required String title,
-    required String subtitle,
-    required Color borderColor,
-    required IconData icon,
-  }) {
+  Widget _buildScheduleCard({required String time, required String title, required String subtitle, required Color borderColor, required IconData icon}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: borderColor, width: 4),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border(left: BorderSide(color: borderColor, width: 4)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Row(
         children: [
@@ -398,121 +438,18 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF757575),
-                  ),
-                ),
+                Text(time, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF757575))),
                 const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
+                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A))),
                 const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF666666),
-                  ),
-                ),
+                Text(subtitle, style: const TextStyle(fontSize: 13, color: Color(0xFF666666))),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F5F5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFF0D6E53),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnnouncementCard({
-    required String tag,
-    required Color tagColor,
-    required Color tagBackground,
-    required String time,
-    required String title,
-    required String body,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: tagBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  tag,
-                  style: TextStyle(
-                    color: tagColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                time,
-                style: const TextStyle(
-                  color: Color(0xFF757575),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF666666),
-              height: 1.4,
-            ),
+            decoration: const BoxDecoration(color: Color(0xFFF5F5F5), shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: const Color(0xFF0D6E53)),
           ),
         ],
       ),
@@ -528,15 +465,8 @@ class HomeScreen extends ConsumerWidget {
       },
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0D6E53) : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: isSelected ? Colors.white : const Color(0xFF757575),
-          size: 26,
-        ),
+        decoration: BoxDecoration(color: isSelected ? const Color(0xFF0D6E53) : Colors.transparent, shape: BoxShape.circle),
+        child: Icon(icon, color: isSelected ? Colors.white : const Color(0xFF757575), size: 26),
       ),
     );
   }

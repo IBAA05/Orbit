@@ -64,6 +64,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
       ref.read(authProvider.notifier).setAuthenticated(
             fullName: token.fullName,
+            email: token.email,
+            studentId: token.studentId,
             isStaff: token.isStaff,
           );
 

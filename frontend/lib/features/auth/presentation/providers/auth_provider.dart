@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/repositories/auth_repository.dart';
 
 // ─── Repository provider ──────────────────────────────────────────────────────
-// Any screen or provider can use: ref.read(authRepositoryProvider)
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepository(),
 );
@@ -16,11 +15,15 @@ enum AuthStatus { loading, authenticated, unauthenticated }
 class AuthState {
   final AuthStatus status;
   final String? fullName;
+  final String? email;
+  final String? studentId;
   final bool isStaff;
 
   const AuthState({
     required this.status,
     this.fullName,
+    this.email,
+    this.studentId,
     this.isStaff = false,
   });
 
@@ -39,15 +42,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _checkExistingSession();
   }
 
-  /// Called on app start — if we already have a token, restore the session.
   Future<void> _checkExistingSession() async {
     final isLoggedIn = await _repo.isLoggedIn();
     if (isLoggedIn) {
       final fullName = await _storage.read(key: 'full_name');
+      final email = await _storage.read(key: 'email');
+      final studentId = await _storage.read(key: 'student_id');
       final isStaff = (await _storage.read(key: 'is_staff')) == 'true';
       state = AuthState(
         status: AuthStatus.authenticated,
         fullName: fullName,
+        email: email,
+        studentId: studentId,
         isStaff: isStaff,
       );
     } else {
@@ -55,16 +61,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Call this after a successful login/register from the UI.
-  void setAuthenticated({required String fullName, required bool isStaff}) {
+  void setAuthenticated({
+    required String fullName,
+    required String email,
+    String? studentId,
+    required bool isStaff,
+  }) {
     state = AuthState(
       status: AuthStatus.authenticated,
       fullName: fullName,
+      email: email,
+      studentId: studentId,
       isStaff: isStaff,
     );
   }
 
-  /// Call this on logout.
   Future<void> logout() async {
     await _repo.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
@@ -72,7 +83,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 // ─── Global Auth Provider ─────────────────────────────────────────────────────
-// Watch this in the splash screen to decide where to redirect.
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref.read(authRepositoryProvider));
 });

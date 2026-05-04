@@ -49,6 +49,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Update global auth state
       ref.read(authProvider.notifier).setAuthenticated(
             fullName: token.fullName,
+            email: token.email,
+            studentId: token.studentId,
             isStaff: token.isStaff,
           );
 

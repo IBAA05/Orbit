@@ -1,230 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../providers/announcement_provider.dart';
+import '../../data/models/announcement_model.dart';
 
-class AnnouncementDetailsScreen extends StatelessWidget {
+class AnnouncementDetailsScreen extends ConsumerWidget {
   const AnnouncementDetailsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAF2F8), // Top light blue section
-      body: Stack(
-        children: [
-          // Background Icon centered in top section 
-          Positioned(
-            top: 70,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                height: 100,
-                width: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.campaign, size: 48, color: Colors.white),
-              ),
-            ),
-          ),
-          
-          // Header Row
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.arrow_back, color: Color(0xFF0D6E53), size: 20),
-                    ),
-                  ),
-                  const Text(
-                    'Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF0D6E53),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.share, color: Color(0xFF0D6E53), size: 18),
-                  ),
-                ],
-              ),
-            ),
-          ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final announcementId = ModalRoute.of(context)?.settings.arguments as int?;
+    
+    if (announcementId == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Error')),
+        body: const Center(child: Text('Invalid Announcement ID')),
+      );
+    }
 
-          // Main White Sheet
-          Positioned.fill(
-            top: 180, // Height from top where white sheet starts
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+    final announcementAsync = ref.watch(announcementDetailProvider(announcementId));
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFEAF2F8),
+      body: announcementAsync.when(
+        data: (announcement) => _buildContent(context, announcement),
+        loading: () => const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF0D6E53)),
+              SizedBox(height: 16),
+              Text('Fetching announcement details...', style: TextStyle(color: Color(0xFF0D6E53))),
+            ],
+          ),
+        ),
+        error: (err, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Unable to load details',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Pill floating above the sheet
-                  Positioned(
-                    top: -16,
-                    left: 24,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      child: const Text(
-                        'Academic',
-                        style: TextStyle(
-                          color: Color(0xFF1E659A),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                const SizedBox(height: 8),
+                Text(
+                  err.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => ref.refresh(announcementDetailProvider(announcementId)),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0D6E53),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
-                  
-                  // Scrollable Content Content
-                  Positioned.fill(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.only(top: 32, left: 24, right: 24, bottom: 100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Midterm Examination Schedule Released',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF1A1A1A),
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Posted 2 hours ago • by Admin',
-                            style: TextStyle(
-                              color: Color(0xFF666666),
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          
-                          // Icon Chips Row
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _buildInfoChip(Icons.category_outlined, 'Academic'),
-                                const SizedBox(width: 12),
-                                _buildInfoChip(Icons.people_outline, 'All students'),
-                                const SizedBox(width: 12),
-                                _buildInfoChip(Icons.notifications_outlined, 'Sent'),
-                              ],
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          const Divider(color: Color(0xFFEEEEEE)),
-                          const SizedBox(height: 24),
-                          
-                          // Fake Image PDF box (Moved above description)
-                          Container(
-                            height: 110, // Reduced height
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(16),
-                              image: const DecorationImage(
-                                image: AssetImage('assets/images/announcement_banner.jpg'),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            child: Stack(
-                              children: [
-                                Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: const BoxDecoration(
-                                      borderRadius: BorderRadius.only(
-                                        bottomLeft: Radius.circular(16),
-                                        bottomRight: Radius.circular(16),
-                                      ),
-                                      gradient: LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [Colors.black54, Colors.transparent],
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'View Full PDF Schedule',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          
-                          const Text(
-                            'DETAILS',
-                            style: TextStyle(
-                              color: Color(0xFF757575),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          const Text(
-                            'The Office of the Registrar has officially released the schedule for the upcoming Midterm Examinations for the Fall 2024 Semester. Students are advised to review their specific course timings and venue assignments through the student portal.\n\nPlease note that exams will be conducted strictly according to the published timetable. No rescheduling requests will be entertained except in documented cases of medical emergencies or institutional conflicts.\n\nEnsure you arrive at least 15 minutes prior to the start time with your valid Student ID card. Digital copies of the ID will not be accepted at the examination halls.',
-                            style: TextStyle(
-                              color: Color(0xFF424242),
-                              fontSize: 15,
-                              height: 1.7,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
@@ -236,10 +78,10 @@ class AnnouncementDetailsScreen extends StatelessWidget {
             ),
           ),
           child: OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.check_circle_outline, color: Color(0xFF0D6E53)),
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF0D6E53)),
             label: const Text(
-              'Mark as read',
+              'Back to Feed',
               style: TextStyle(
                 color: Color(0xFF0D6E53),
                 fontWeight: FontWeight.w700,
@@ -259,27 +101,207 @@ class AnnouncementDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: const Color(0xFF666666)),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF424242),
+  Widget _buildContent(BuildContext context, AnnouncementModel announcement) {
+    Color categoryColor;
+    IconData categoryIcon;
+    
+    final String category = announcement.category;
+    
+    switch (category) {
+      case 'Urgent':
+        categoryColor = Colors.red;
+        categoryIcon = Icons.emergency_outlined;
+        break;
+      case 'Academic':
+        categoryColor = const Color(0xFF0D6E53);
+        categoryIcon = Icons.school_outlined;
+        break;
+      case 'Event':
+        categoryColor = Colors.blue;
+        categoryIcon = Icons.event_note_outlined;
+        break;
+      default:
+        categoryColor = Colors.orange;
+        categoryIcon = Icons.campaign_outlined;
+    }
+
+    return Stack(
+      children: [
+        // Top Background with Icon
+        Container(
+          height: 220,
+          width: double.infinity,
+          color: const Color(0xFF0D6E53).withValues(alpha: 0.1),
+          child: Center(
+            child: Icon(
+              categoryIcon,
+              size: 80,
+              color: const Color(0xFF0D6E53).withValues(alpha: 0.2),
             ),
           ),
-        ],
-      ),
+        ),
+        
+        // Header Controls
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Color(0xFF0D6E53), size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Text(
+                  category.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0D6E53),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.share, color: Color(0xFF0D6E53), size: 18),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Main Sheet
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 180),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 20,
+                offset: Offset(0, -5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(28, 40, 28, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      category,
+                      style: TextStyle(
+                        color: categoryColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    announcement.title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1A1A1A),
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      Text(
+                        DateFormat('EEEE, MMM dd • hh:mm a').format(announcement.createdAt),
+                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'MESSAGE',
+                    style: TextStyle(
+                      color: Color(0xFF757575),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    announcement.body,
+                    style: const TextStyle(
+                      color: Color(0xFF424242),
+                      fontSize: 16,
+                      height: 1.8,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  
+                  if (category == 'Event')
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.event, color: Colors.blue, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'Campus Event',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'This announcement is linked to an official campus event. Please check the Events section for registration and venue details.',
+                            style: TextStyle(color: Colors.black54, fontSize: 14, height: 1.4),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(context, '/events'),
+                            child: const Text('Go to Events', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

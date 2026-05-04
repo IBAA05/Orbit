@@ -20,7 +20,14 @@ router = APIRouter(prefix="/announcements", tags=["📢 Announcements"])
 def _build_response(a: AnnouncementModel) -> dict:
     res = {c.name: getattr(a, c.name) for c in a.__table__.columns}
     res["read_count"] = len(a.read_receipts) if a.read_receipts else 0
-    res["author"] = a.author
+    if a.author:
+        res["author"] = {
+            "id": a.author.id,
+            "full_name": a.author.full_name,
+            "is_staff": a.author.is_staff
+        }
+    else:
+        res["author"] = {"id": 0, "full_name": "System", "is_staff": True}
     return res
 
 

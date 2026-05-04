@@ -99,6 +99,10 @@ class AuthRepository {
     await _storage.write(key: 'access_token', value: token.accessToken);
     await _storage.write(key: 'user_id', value: token.userId.toString());
     await _storage.write(key: 'full_name', value: token.fullName);
+    await _storage.write(key: 'email', value: token.email);
+    if (token.studentId != null) {
+      await _storage.write(key: 'student_id', value: token.studentId);
+    }
     await _storage.write(key: 'is_staff', value: token.isStaff.toString());
   }
 

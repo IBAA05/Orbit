@@ -94,6 +94,8 @@ class _BiometricsScreenState extends ConsumerState<BiometricsScreen>
 
       ref.read(authProvider.notifier).setAuthenticated(
             fullName: token.fullName,
+            email: token.email,
+            studentId: token.studentId,
             isStaff: token.isStaff,
           );
 

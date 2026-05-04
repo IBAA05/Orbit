@@ -13,3 +13,8 @@ final announcementListProvider = FutureProvider<List<AnnouncementModel>>((ref) a
   final category = ref.watch(selectedCategoryProvider);
   return repository.getAnnouncements(category: category);
 });
+
+final announcementDetailProvider = FutureProvider.family<AnnouncementModel, int>((ref, id) async {
+  final repository = ref.watch(announcementRepositoryProvider);
+  return repository.getAnnouncementById(id);
+});

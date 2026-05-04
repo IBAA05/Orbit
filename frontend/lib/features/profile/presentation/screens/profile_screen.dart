@@ -1,11 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/routing/app_routes.dart';
+import 'package:orbit/features/auth/presentation/providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final String name = authState.fullName ?? 'Guest User';
+    final String email = authState.email ?? 'guest@university.edu';
+    final String? studentId = authState.studentId;
+    final bool isStaff = authState.isStaff;
+
+    // Generate initials for avatar
+    String initials = '??';
+    if (name.isNotEmpty) {
+      final parts = name.split(' ');
+      if (parts.length >= 2) {
+        initials = parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
+      } else if (parts.isNotEmpty) {
+        initials = parts[0][0].toUpperCase();
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       extendBody: true,
@@ -49,9 +68,9 @@ class ProfileScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        'IL',
-                        style: TextStyle(
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -59,18 +78,41 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Ibaa Lamouri',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        if (isStaff) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0D6E53).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'STAFF',
+                              style: TextStyle(
+                                color: Color(0xFF0D6E53),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'ibaa@university.edu • ID: 882910',
-                      style: TextStyle(
+                    Text(
+                      '$email ${studentId != null ? "• ID: $studentId" : ""}',
+                      style: const TextStyle(
                         fontSize: 14,
                         color: Color(0xFF757575),
                       ),
@@ -130,7 +172,12 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 32),
               // Log Out Button
               OutlinedButton.icon(
-                onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.login),
+                onPressed: () async {
+                  await ref.read(authProvider.notifier).logout();
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, AppRoutes.login);
+                  }
+                },
                 icon: const Icon(Icons.logout, color: Color(0xFFD32F2F), size: 20),
                 label: const Text(
                   'Log Out',
