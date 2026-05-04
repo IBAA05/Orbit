@@ -49,7 +49,7 @@ This project implements core hardware and system-level integrations required in 
 
 ## 🏗️ Technical Architecture
 
-- **Frontend**: Flutter (MVVM architecture with Riverpod for state management).
+- **Frontend**: Flutter (Clean architecture with Riverpod for state management).
 - **Backend**: FastAPI (Python) using a RESTful architecture.
 - **Database**: SQLite (SQLAlchemy) for robust local/server data handling.
 - **Networking**: `Dio` client with interceptors for automatic JWT header attachment.
@@ -93,5 +93,3 @@ Use these accounts to test the different permission levels:
 | **Staff Admin** | `admin@university.edu` | `Admin123!` | Camera Access, File Uploads, Admin Panel |
 | **Student** | `ibaa@university.edu` | `Student123!` | Personal Feed, Timetable, Register for Events |
 
----
-*Created for the 4th Year Engineering Mobile OS Curriculum.*

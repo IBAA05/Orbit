@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:location/location.dart';
 import '../../../../core/routing/app_routes.dart';
 
 class CampusMapScreen extends StatefulWidget {
@@ -25,58 +25,54 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
 
   /// Handles GPS permissions and initial location fetch
   Future<void> _determinePosition() async {
+    final location = Location();
     bool serviceEnabled;
-    LocationPermission permission;
+    PermissionStatus permissionGranted;
 
     setState(() => _isLocating = true);
 
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    // 1. Check if location service is enabled, and request if not
+    serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enable GPS to see your position.')),
+          );
+        }
+        setState(() => _isLocating = false);
+        return;
+      }
+    }
+
+    // 2. Check for permissions
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        setState(() => _isLocating = false);
+        return;
+      }
+    }
+
+    if (permissionGranted == PermissionStatus.deniedForever) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location services are disabled. Please enable GPS.')),
+          const SnackBar(content: Text('Location permissions are permanently denied. Please enable them in settings.')),
         );
       }
       setState(() => _isLocating = false);
       return;
     }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() => _isLocating = false);
-        return;
-      }
-    }
-    
-    if (permission == LocationPermission.deniedForever) {
-      setState(() => _isLocating = false);
-      return;
-    } 
-
-    // Get current position with settings
+    // 3. Get current location
     try {
-      // Try to get last known position first (much faster)
-      final lastKnown = await Geolocator.getLastKnownPosition();
-      if (lastKnown != null && mounted) {
-        setState(() {
-          _currentPosition = LatLng(lastKnown.latitude, lastKnown.longitude);
-          _center = _currentPosition!;
-        });
-        _mapController.move(_center, 15.0);
-      }
-
-      // Then get fresh position with timeout (using direct parameters for better compatibility)
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
+      final locationData = await location.getLocation();
 
       if (mounted) {
         setState(() {
-          _currentPosition = LatLng(position.latitude, position.longitude);
+          _currentPosition = LatLng(locationData.latitude!, locationData.longitude!);
           _center = _currentPosition!;
           _isLocating = false;
         });
@@ -86,7 +82,7 @@ class _CampusMapScreenState extends State<CampusMapScreen> {
       if (mounted) {
         setState(() => _isLocating = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('GPS Error: ${e.toString()}. Try standing near a window.')),
+          SnackBar(content: Text('GPS Error: ${e.toString()}')),
         );
       }
     }

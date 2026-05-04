@@ -27,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
             fontSize: 22,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.5,
-          ),
+          ),  
         ),
         actions: [
           IconButton(
